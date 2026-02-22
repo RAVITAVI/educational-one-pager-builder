@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- כותרת הדף בדפדפן -->
     <title>קמפוס חמד - One Pager</title>
+
+    <!-- תגיות Meta עבור תצוגה מקדימה (גוגל קלאסרום, וואטסאפ וכו') -->
+    <meta property="og:title" content="קמפוס חמד - One Pager">
+    <meta property="og:description" content="כלי לאפיון וניהול יוזמות חינוכיות">
+    <meta name="description" content="קמפוס חמד - כלי לאפיון יוזמות (One Pager)">
+
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <!-- FileSaver and HTML-DOCX for Word Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -382,11 +390,9 @@
             const projectName = document.getElementById('projectName').innerText || "Project";
             const category = document.getElementById('category').value || "";
             
-            // פונקציית עזר לניקוי HTML וטקסט
             const getContent = (id) => {
                 const el = document.getElementById(id);
                 let html = el.innerHTML || el.value || "";
-                // המרת <br> ו-<div> לתווי ירידת שורה שוורד מבין
                 return html.replace(/<br\s*\/?>/gi, "<br/>").replace(/<\/div>/gi, "<br/>").replace(/<div>/gi, "");
             };
 
@@ -405,7 +411,6 @@
                 </style>
                 </head>
                 <body style="tab-interval:36pt">
-                    <!-- טבלת כותרת -->
                     <table class="header-table">
                         <tr>
                             <td style="width:70%; text-align:right; vertical-align:middle;">
@@ -437,10 +442,6 @@
 
                     <div class="section-header">ייחודיות וערך מוסף</div>
                     <div class="section-content">${getContent('uniqueness')}</div>
-                    
-                    <div style="margin-top: 40pt; text-align: center; color: #999999; font-size: 9pt; border-top: 1pt solid #eeeeee; padding-top: 10pt;">
-                        נוצר באמצעות One Pager - כלי אפיון ליזמות
-                    </div>
                 </body>
                 </html>
             `;
@@ -461,11 +462,6 @@
                     <meta charset="UTF-8">
                     <title>הדפסת One Pager</title>
                     <style>${styles}</style>
-                    <style>
-                        .editable-area { border: none !important; }
-                        .select-input { border: none !important; appearance: none !important; -webkit-appearance: none; font-weight: bold; }
-                        .hint-text, .page-break-label { display: none !important; }
-                    </style>
                 </head>
                 <body>
                     <div class="document-container">
