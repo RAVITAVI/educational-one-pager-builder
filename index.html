@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Pager - תיקון ייצוא לוורד</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FileSaver and HTML-DOCX for Word Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.rawgit.com/evidenceprime/html-docx-js/master/dist/html-docx.js"></script>
+    
+    <style id="mainStyles">
+        :root {
+            --primary-color: #000000;
+            --accent-color: #3498db;
+            --bg-color: #e9ecef;
+            --paper-color: #ffffff;
+            --text-color: #2c3e50;
+            --hint-color: #7f8c8d;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-color);
+        }
+
+        /* UI Controls */
+        .controls {
+            position: fixed; top: 20px; left: 20px;
+            display: flex; flex-direction: column; gap: 10px;
+            z-index: 1000;
+        }
+        .btn {
+            background-color: #2c3e50; color: white; border: none; padding: 12px 20px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        #cloudStatus { background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 5px; font-size: 11px; text-align: center; border: 1px solid #ccc; }
+
+        /* Document Styling */
+        .document-container {
+            margin: 40px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            background: var(--paper-color);
+            padding: 20mm 15mm;
+            box-sizing: border-box;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            width: 120px; height: 120px;
+            border: 2px dashed var(--border-color);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; position: relative; cursor: pointer;
+            background: #fafafa; border-radius: 8px; overflow: hidden;
+        }
+        .logo-container img { width: 100%; height: 100%; object-fit: contain; }
+        .logo-container span { font-size: 11px; color: var(--hint-color); padding: 5px; }
+
+        .field-group { margin-bottom: 20px; }
+        
+        .label {
+            font-weight: 800; font-size: 18px; color: var(--primary-color);
+            display: block; margin-bottom: 5px; border-right: 4px solid var(--accent-color); padding-right: 10px;
+        }
+
+        .hint-text {
+            font-size: 12px; color: #666; display: block; margin-bottom: 8px; line-height: 1.4;
+            background: #f0f4f8; padding: 8px; border-radius: 4px;
+        }
+
+        .editable-area {
+            width: 100%; min-height: 30px; border: 1px solid transparent;
+            padding: 5px 0; font-size: 16px; outline: none; line-height: 1.6;
+            text-align: right;
+        }
+        .editable-area:focus { background: #fffdf0; border-bottom: 1px solid var(--accent-color); }
+
+        .select-input {
+            width: 100%; padding: 8px; font-family: 'Heebo'; font-size: 16px;
+            border: 1px solid var(--border-color); border-radius: 4px; background: white;
+        }
+
+        .page-break-label { text-align: center; color: #95a5a6; font-size: 11px; margin: 5px 0; }
+
+        /* Modal Overlays */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 5000; display: none;
+            justify-content: center; align-items: center; backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 15px; width: 500px; max-width: 90%;
+            text-align: center; position: relative;
+        }
+
+        .startup-item { 
+            padding: 12px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 8px; 
+            cursor: pointer; display: flex; justify-content: space-between; background: white;
+        }
+        .startup-item:hover { background: #f0f7ff; border-color: var(--accent-color); }
+
+        /* PRINT-ONLY STYLES */
+        @media print {
+            @page { 
+                size: A4; 
+                margin: 0; 
+            }
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                background: white !important;
+            }
+            .controls, .page-break-label, .modal-overlay, .logo-container span, .hint-text { display: none !important; }
+            .document-container { margin: 0; padding: 0; display: block; width: 210mm; }
+            .page { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                border: none !important; 
+                padding: 15mm 15mm !important;
+                width: 210mm !important; 
+                height: 297mm !important; 
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                display: flex !important;
+                background: white !important;
+            }
+            .editable-area { border: none !important; background: transparent !important; }
+            .select-input { border: none !important; appearance: none !important; -webkit-appearance: none !important; font-weight: bold; font-size: 18px; background: transparent !important; }
+            .header-section { border-bottom: 4px solid #000 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <div id="cloudStatus">מתחבר...</div>
+        <button class="btn" id="saveBtn" style="background: #27ae60;">☁️ שמירה בענן</button>
+        <button class="btn" id="switchBtn">🔄 החלפת יוזמה</button>
+        <button class="btn" id="printBtn" style="background: #e67e22;">🖨️ שמירה כ-PDF / הדפסה</button>
+        <button class="btn" id="wordBtn" style="background: #2980b9;">📝 שמירה לוורד (Word)</button>
+        <button class="btn" id="adminTriggerBtn" style="background: #34495e;">🔒 ניהול</button>
+    </div>
+
+    <div class="document-container" id="printableArea">
+        <!-- PAGE 1 -->
+        <div class="page" id="page1">
+            <div class="header-section">
+                <div style="flex: 1; margin-left: 20px;">
+                    <div class="field-group">
+                        <label class="label">שם המיזם:</label>
+                        <span class="hint-text">שם קצר וקליט שייצג את הרעיון בצורה חדשנית.</span>
+                        <div class="editable-area" id="projectName" contenteditable="true" style="font-size: 26px; font-weight: 900;"></div>
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="label" style="font-size: 15px;">תחום היוזמה:</label>
+                        <select class="select-input" id="category">
+                            <option value="" disabled selected>בחרו תחום</option>
+                            <option value="חברתית">חברתית</option>
+                            <option value="סביבתית">סביבתית</option>
+                            <option value="לימודית">לימודית</option>
+                            <option value="בריאותית">בריאותית</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="logo-container" id="logoClickArea" onclick="document.getElementById('logoInput').click()">
+                    <input type="file" id="logoInput" hidden accept="image/*">
+                    <img id="logoPreview" style="display: none;">
+                    <span id="logoPlaceholder">📸 לוגו המיזם</span>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="label">חברי צוות ותפקידים:</label>
+                <span class="hint-text">שמות ותחומי אחריות (מנכ"ל, מעצב, טכנולוגי וכו').</span>
+                <div class="editable-area" id="team" contenteditable="true" style="min-height: 60px;"></div>
+            </div>
+
+            <div class="field-group">
+                <label class="label">רקע וחזון:</label>
+                <span class="hint-text">מהות הרעיון והשינוי שהמוצר יחולל בעולם.</span>
+                <div class="editable-area" id="vision" contenteditable="true" style="min-height: 80px;"></div>
+            </div>
+
+            <div class="field-group">
+                <label class="label">הבעיה / הצורך:</label>
+                <span class="hint-text">מה האתגר? למי זה מפריע? מה המצב כיום?</span>
+                <div class="editable-area" id="problem" contenteditable="true" style="min-height: 180px;"></div>
+            </div>
+        </div>
+
+        <div class="page-break-label">--- סוף עמוד 1 ---</div>
+
+        <!-- PAGE 2 -->
+        <div class="page" id="page2">
+            <div class="field-group">
+                <label class="label">הפתרון המוצע:</label>
+                <span class="hint-text">תיאור המיזם ואיך הוא עונה על הצורך.</span>
+                <div class="editable-area" id="solution" contenteditable="true" style="min-height: 140px;"></div>
+            </div>
+
+            <div class="field-group">
+                <label class="label">איך זה עובד?</label>
+                <span class="hint-text">תיאור טכני או תפעולי של המוצר/שירות.</span>
+                <div class="editable-area" id="howItWorks" contenteditable="true" style="min-height: 200px;"></div>
+            </div>
+
+            <div class="field-group">
+                <label class="label">ייחודיות וערך מוסף:</label>
+                <span class="hint-text">למה שיבחרו בכם? מה היתרון על פני אחרים?</span>
+                <div class="editable-area" id="uniqueness" contenteditable="true" style="min-height: 140px;"></div>
+            </div>
+
+            <div style="margin-top: auto; border-top: 1px solid #eee; padding-top: 10px; text-align: left; font-size: 11px; color: #aaa;">
+                One Pager - יזמות כיתתית | תכנית אפיון רשמית
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="startupModal" class="modal-overlay" style="display: flex;">
+        <div class="modal-content">
+            <h2>ברוכות הבאות! 🚀</h2>
+            <div id="startupLoader">טוען...</div>
+            <div class="startup-list" id="startupList"></div>
+            <button class="btn" onclick="document.getElementById('adminTriggerBtn').click()" style="margin-top:15px; width:100%;">כניסת מורה</button>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal-overlay">
+        <div class="modal-content" style="text-align: right;">
+            <h3>🔒 ניהול</h3>
+            <div id="adminAuth">
+                <input type="password" id="adminPin" placeholder="קוד גישה" style="width:100%; padding:10px; margin:10px 0;">
+                <button class="btn" id="loginAdminBtn" style="width:100%;">כניסה</button>
+            </div>
+            <div id="adminPanel" style="display:none;">
+                <input type="text" id="newProjName" placeholder="שם יוזמה חדשה" style="width:100%; padding:8px;">
+                <button class="btn" id="addProjBtn" style="width:100%; margin:10px 0;">הוסף</button>
+                <div id="adminListContainer"></div>
+                <button class="btn" id="closeAdminBtn" style="width:100%; background:#95a5a6;">סגור</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA4hs-olPLdz43xxzybEA88doKy2v4HJi0",
+            authDomain: "school-onepager.firebaseapp.com",
+            projectId: "school-onepager",
+            storageBucket: "school-onepager.firebasestorage.app",
+            messagingSenderId: "178469105635",
+            appId: "1:178469105635:web:8aea3d99706ab233923ad6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const COLLECTION_ID = 'school-onepager-v1'; 
+        
+        let currentDocId = null;
+        let globalDocs = [];
+        let currentLogoBase64 = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById('cloudStatus').innerText = '☁️ מחובר';
+                onSnapshot(collection(db, 'artifacts', COLLECTION_ID, 'public', 'data', 'projects'), (snap) => {
+                    globalDocs = []; snap.forEach(d => globalDocs.push(d.data()));
+                    renderLists();
+                    document.getElementById('startupLoader').style.display = 'none';
+                });
+            } else { signInAnonymously(auth); }
+        });
+
+        document.getElementById('logoInput').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                currentLogoBase64 = event.target.result;
+                const img = document.getElementById('logoPreview');
+                img.src = currentLogoBase64; img.style.display = 'block';
+                document.getElementById('logoPlaceholder').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        };
+
+        const renderLists = () => {
+            const startup = document.getElementById('startupList');
+            const admin = document.getElementById('adminListContainer');
+            startup.innerHTML = ''; admin.innerHTML = '';
+            globalDocs.forEach(d => {
+                const sItem = document.createElement('div');
+                sItem.className = 'startup-item';
+                sItem.innerHTML = `<strong>${d.name}</strong> <span>⬅️</span>`;
+                sItem.onclick = () => loadProject(d);
+                startup.appendChild(sItem);
+
+                const aItem = document.createElement('div');
+                aItem.style = "display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee;";
+                aItem.innerHTML = `<span>${d.name}</span> <button onclick="deleteProject('${d.id}')" style="color:red; background:none; border:none;">✖</button>`;
+                admin.appendChild(aItem);
+            });
+        };
+
+        const loadProject = (d) => {
+            currentDocId = d.id;
+            document.getElementById('projectName').innerText = d.projectName || d.name;
+            document.getElementById('category').value = d.category || '';
+            document.getElementById('team').innerHTML = d.team || '';
+            document.getElementById('vision').innerHTML = d.vision || '';
+            document.getElementById('problem').innerHTML = d.problem || '';
+            document.getElementById('solution').innerHTML = d.solution || '';
+            document.getElementById('howItWorks').innerHTML = d.howItWorks || '';
+            document.getElementById('uniqueness').innerHTML = d.uniqueness || '';
+            if (d.logoBase64) {
+                currentLogoBase64 = d.logoBase64;
+                const img = document.getElementById('logoPreview');
+                img.src = currentLogoBase64; img.style.display = 'block';
+                document.getElementById('logoPlaceholder').style.display = 'none';
+            }
+            document.getElementById('startupModal').style.display = 'none';
+        };
+
+        document.getElementById('saveBtn').onclick = async () => {
+            if(!currentDocId) return;
+            const btn = document.getElementById('saveBtn'); btn.innerText = '⌛ שומר...';
+            await setDoc(doc(db, 'artifacts', COLLECTION_ID, 'public', 'data', 'projects', currentDocId), {
+                projectName: document.getElementById('projectName').innerText,
+                category: document.getElementById('category').value,
+                team: document.getElementById('team').innerHTML,
+                vision: document.getElementById('vision').innerHTML,
+                problem: document.getElementById('problem').innerHTML,
+                solution: document.getElementById('solution').innerHTML,
+                howItWorks: document.getElementById('howItWorks').innerHTML,
+                uniqueness: document.getElementById('uniqueness').innerHTML,
+                logoBase64: currentLogoBase64
+            }, { merge: true });
+            btn.innerText = '✅ נשמר!';
+            setTimeout(() => btn.innerText = '☁️ שמירה בענן', 2000);
+        };
+
+        document.getElementById('wordBtn').onclick = () => {
+            const projectName = document.getElementById('projectName').innerText || "Project";
+            const category = document.getElementById('category').value || "";
+            
+            // פונקציית עזר לניקוי HTML וטקסט
+            const getContent = (id) => {
+                const el = document.getElementById(id);
+                let html = el.innerHTML || el.value || "";
+                // המרת <br> ו-<div> לתווי ירידת שורה שוורד מבין
+                return html.replace(/<br\s*\/?>/gi, "<br/>").replace(/<\/div>/gi, "<br/>").replace(/<div>/gi, "");
+            };
+
+            const docHtml = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                <meta charset='utf-8'>
+                <style>
+                    body { font-family: 'Arial Unicode MS', 'Arial', sans-serif; direction: rtl; text-align: right; }
+                    .header-table { width: 100%; border-bottom: 3pt solid #000000; margin-bottom: 20pt; }
+                    .project-title { font-size: 26pt; font-weight: bold; margin: 0; }
+                    .category-tag { font-size: 14pt; color: #555555; }
+                    .section-header { font-size: 16pt; font-weight: bold; color: #2980b9; background-color: #f2f2f2; padding: 5pt; border-right: 5pt solid #2980b9; margin-top: 20pt; margin-bottom: 10pt; }
+                    .section-content { font-size: 12pt; line-height: 1.5; margin-bottom: 15pt; }
+                    table { border-collapse: collapse; width: 100%; }
+                </style>
+                </head>
+                <body style="tab-interval:36pt">
+                    <!-- טבלת כותרת -->
+                    <table class="header-table">
+                        <tr>
+                            <td style="width:70%; text-align:right; vertical-align:middle;">
+                                <div class="project-title">${projectName}</div>
+                                <div class="category-tag">תחום: ${category}</div>
+                            </td>
+                            <td style="width:30%; text-align:left; vertical-align:middle;">
+                                ${currentLogoBase64 ? `<img src="${currentLogoBase64}" width="100" height="100" style="display:block;">` : ''}
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="section-header">צוות המיזם ותפקידים</div>
+                    <div class="section-content">${getContent('team')}</div>
+
+                    <div class="section-header">חזון המיזם</div>
+                    <div class="section-content">${getContent('vision')}</div>
+
+                    <div class="section-header">הבעיה והצורך</div>
+                    <div class="section-content">${getContent('problem')}</div>
+
+                    <br clear=all style='mso-special-character:line-break;page-break-before:always'>
+
+                    <div class="section-header">הפתרון המוצע</div>
+                    <div class="section-content">${getContent('solution')}</div>
+
+                    <div class="section-header">איך זה עובד?</div>
+                    <div class="section-content">${getContent('howItWorks')}</div>
+
+                    <div class="section-header">ייחודיות וערך מוסף</div>
+                    <div class="section-content">${getContent('uniqueness')}</div>
+                    
+                    <div style="margin-top: 40pt; text-align: center; color: #999999; font-size: 9pt; border-top: 1pt solid #eeeeee; padding-top: 10pt;">
+                        נוצר באמצעות One Pager - כלי אפיון ליזמות
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            const converted = htmlDocx.asBlob(docHtml);
+            saveAs(converted, `${projectName}_OnePager.docx`);
+        };
+
+        document.getElementById('printBtn').onclick = () => {
+            const printWindow = window.open('', '_blank', 'width=1000,height=1000');
+            const styles = document.getElementById('mainStyles').innerHTML;
+            const content = document.getElementById('printableArea').innerHTML;
+            const categoryValue = document.getElementById('category').value;
+
+            printWindow.document.write(`
+                <html lang="he" dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>הדפסת One Pager</title>
+                    <style>${styles}</style>
+                    <style>
+                        .editable-area { border: none !important; }
+                        .select-input { border: none !important; appearance: none !important; -webkit-appearance: none; font-weight: bold; }
+                        .hint-text, .page-break-label { display: none !important; }
+                    </style>
+                </head>
+                <body>
+                    <div class="document-container">
+                        ${content}
+                    </div>
+                    <script>
+                        const selects = document.querySelectorAll('select');
+                        if (selects.length > 0) selects[0].value = "${categoryValue}";
+                        window.onload = function() {
+                            setTimeout(() => {
+                                window.print();
+                                window.close();
+                            }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        };
+
+        // Admin logic
+        document.getElementById('adminTriggerBtn').onclick = () => document.getElementById('adminModal').style.display = 'flex';
+        document.getElementById('loginAdminBtn').onclick = () => {
+            if(document.getElementById('adminPin').value === '173') {
+                document.getElementById('adminAuth').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+            }
+        };
+        document.getElementById('addProjBtn').onclick = async () => {
+            const name = document.getElementById('newProjName').value.trim();
+            if(!name) return;
+            const id = 'p' + Date.now();
+            await setDoc(doc(db, 'artifacts', COLLECTION_ID, 'public', 'data', 'projects', id), { id, name });
+            document.getElementById('newProjName').value = '';
+        };
+        window.deleteProject = async (id) => { if(confirm('מחיקה?')) await deleteDoc(doc(db, 'artifacts', COLLECTION_ID, 'public', 'data', 'projects', id)); };
+        document.getElementById('closeAdminBtn').onclick = () => document.getElementById('adminModal').style.display = 'none';
+        document.getElementById('switchBtn').onclick = () => location.reload();
+
+    </script>
+</body>
+</html>
