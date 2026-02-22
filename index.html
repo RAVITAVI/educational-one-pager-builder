@@ -119,6 +119,11 @@
             text-align: center; position: relative;
         }
 
+        .close-modal-x {
+            position: absolute; top: 15px; right: 15px; font-size: 24px; cursor: pointer; color: #7f8c8d; line-height: 1;
+        }
+        .close-modal-x:hover { color: #e74c3c; }
+
         .startup-item { 
             padding: 12px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 8px; 
             cursor: pointer; display: flex; justify-content: space-between; background: white;
@@ -256,6 +261,7 @@
 
     <div id="adminModal" class="modal-overlay">
         <div class="modal-content" style="text-align: right;">
+            <span class="close-modal-x" id="adminCloseX">&times;</span>
             <h3>🔒 ניהול</h3>
             <div id="adminAuth">
                 <input type="password" id="adminPin" placeholder="קוד גישה" style="width:100%; padding:10px; margin:10px 0;">
@@ -265,7 +271,7 @@
                 <input type="text" id="newProjName" placeholder="שם יוזמה חדשה" style="width:100%; padding:8px;">
                 <button class="btn" id="addProjBtn" style="width:100%; margin:10px 0;">הוסף</button>
                 <div id="adminListContainer"></div>
-                <button class="btn" id="closeAdminBtn" style="width:100%; background:#95a5a6;">סגור</button>
+                <button class="btn" id="closeAdminBtn" style="width:100%; background:#95a5a6; margin-top: 10px;">סגור פאנל</button>
             </div>
         </div>
     </div>
@@ -482,7 +488,16 @@
         };
 
         // Admin logic
-        document.getElementById('adminTriggerBtn').onclick = () => document.getElementById('adminModal').style.display = 'flex';
+        document.getElementById('adminTriggerBtn').onclick = () => {
+            document.getElementById('adminModal').style.display = 'flex';
+            document.getElementById('adminAuth').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+        };
+        
+        document.getElementById('adminCloseX').onclick = () => {
+            document.getElementById('adminModal').style.display = 'none';
+        };
+
         document.getElementById('loginAdminBtn').onclick = () => {
             if(document.getElementById('adminPin').value === '173') {
                 document.getElementById('adminAuth').style.display = 'none';
